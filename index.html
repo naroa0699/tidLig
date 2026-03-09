@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi organizador</title>
+    <meta name="theme-color" content="#588157">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Lato:wght@300;400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA DE LOGIN
+══════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <i class="ph ph-book-bookmark"></i>
+      <span>Tidlig</span>
+    </div>
+    <p class="login-subtitulo">tu organizador personal</p>
+
+    <!-- Formulario: Iniciar sesión -->
+    <form id="login-form" autocomplete="on">
+      <h2>Iniciar sesión</h2>
+      <div class="login-campo">
+        <label for="login-email">Correo</label>
+        <input type="email" id="login-email" placeholder="hola@correo.com" required>
+      </div>
+      <div class="login-campo">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••" required>
+      </div>
+      <p id="login-error" class="login-error" style="display:none"></p>
+      <button type="submit">Entrar</button>
+      <p class="login-cambiar">¿No tienes cuenta? <button type="button" id="btn-mostrar-registro">Crear cuenta</button></p>
+    </form>
+
+    <!-- Formulario: Registro -->
+    <form id="register-form" style="display:none" autocomplete="on">
+      <h2>Crear cuenta</h2>
+      <div class="login-campo">
+        <label for="register-email">Correo</label>
+        <input type="email" id="register-email" placeholder="hola@correo.com" required>
+      </div>
+      <div class="login-campo">
+        <label for="register-password">Contraseña</label>
+        <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" required>
+      </div>
+      <div class="login-campo">
+        <label for="register-confirm">Repite la contraseña</label>
+        <input type="password" id="register-confirm" placeholder="••••••••" required>
+      </div>
+      <p id="register-error" class="login-error" style="display:none"></p>
+      <button type="submit">Crear cuenta</button>
+      <p class="login-cambiar">¿Ya tienes cuenta? <button type="button" id="btn-mostrar-login">Iniciar sesión</button></p>
+    </form>
+  </div>
+
+  <!-- Spinner mientras carga los datos -->
+  <div id="login-cargando" style="display:none">
+    <div class="login-spinner"></div>
+    <p>Cargando tus datos…</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP (oculta hasta login)
+══════════════════════════════════════════ -->
+<div id="app-content" style="display:none">
+
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar">
+        <div class="sidebar-logo"><i class="ph ph-flower-lotus" aria-hidden="true"></i><span>Tidlig</span></div>
+        <nav class="sidebar-nav">
+            <button class="nav-btn" data-seccion="hoy"><span class="icono-texto"><i class="ph ph-shooting-star"
+                        aria-hidden="true"></i><span>Hoy</span></span></button>
+            <button class="nav-btn activo" data-seccion="calendario"><span class="icono-texto"><i
+                        class="ph ph-calendar-blank" aria-hidden="true"></i><span>Calendario</span></span></button>
+            <button class="nav-btn" data-seccion="tareas"><span class="icono-texto"><i class="ph ph-check-square"
+                        aria-hidden="true"></i><span>Tareas</span></span></button>
+            <button class="nav-btn" data-seccion="habitos"><span class="icono-texto"><i class="ph ph-seal-check"
+                        aria-hidden="true"></i><span>Hábitos</span></span></button>
+            <button class="nav-btn" data-seccion="notas"><span class="icono-texto"><i class="ph ph-note-pencil"
+                        aria-hidden="true"></i><span>Notas</span></span></button>
+            <button class="nav-btn" data-seccion="pomodoro"><span class="icono-texto"><i class="ph ph-timer"
+                        aria-hidden="true"></i><span>Pomodoro</span></span></button>
+        </nav>
+        <div class="sidebar-tools">
+            <button id="btn-cambiar-tema" type="button"><span class="icono-texto"><i class="ph ph-palette"
+                        aria-hidden="true"></i><span>Tema: Rosa</span></span></button>
+            <div id="panel-temas" class="panel-temas" style="display:none">
+                <div id="tema-opciones" class="tema-opciones"></div>
+            </div>
+
+            <button class="nav-btn" data-seccion="cuenta"><span class="icono-texto"><i class="ph ph-user-circle" aria-hidden="true"></i><span>Cuenta</span></span></button>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="contenido">
+
+        <!-- HOY -->
+        <section id="hoy" class="seccion">
+            <h2>Hoy</h2>
+            <div class="hoy-grid">
+                <article class="hoy-card">
+                    <h3><i class="ph ph-check-circle" aria-hidden="true"></i> Tareas del dia</h3>
+                    <p id="hoy-tareas-resumen">0 pendientes · 0 completadas</p>
+                    <ul id="hoy-tareas-lista" class="hoy-lista"></ul>
+                </article>
+                <article class="hoy-card">
+                    <h3><i class="ph ph-calendar-check" aria-hidden="true"></i> Proximos eventos</h3>
+                    <ul id="hoy-eventos-lista" class="hoy-lista"></ul>
+                </article>
+                <article class="hoy-card">
+                    <h3><i class="ph ph-seal-check" aria-hidden="true"></i> Habitos y foco</h3>
+                    <p id="hoy-habitos-resumen">0/0 habitos completados</p>
+                    <p id="hoy-pomodoro-resumen">Pomodoros hoy: 0</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- CALENDARIO -->
+        <section id="calendario" class="seccion activo">
+            <h2>Calendario</h2>
+
+            <div class="calendario-layout">
+
+                <div class="calendario-contenedor">
+
+                    <div class="calendario-header">
+                        <button id="mes-anterior" aria-label="Mes anterior"><i class="ph ph-caret-left"
+                                aria-hidden="true"></i></button>
+                        <h3 id="mes-actual"></h3>
+                        <button id="mes-siguiente" aria-label="Mes siguiente"><i class="ph ph-caret-right"
+                                aria-hidden="true"></i></button>
+                    </div>
+
+                    <div class="calendario-vistas">
+                        <button class="vista-btn activo" data-vista="mes">Mes</button>
+                        <button class="vista-btn" data-vista="semana">Semana</button>
+                        <button id="toggle-descripciones-semana" class="vista-btn vista-extra" type="button">Mostrar
+                            descripciones</button>
+                    </div>
+
+                    <div class="avisos-config">
+                        <button id="btn-avisos" type="button"><span class="icono-texto"><i class="ph ph-bell"
+                                    aria-hidden="true"></i><span>Activar avisos</span></span></button>
+                        <label for="avisos-anticipacion">Avisar</label>
+                        <select id="avisos-anticipacion">
+                            <option value="5">5 min antes</option>
+                            <option value="10" selected>10 min antes</option>
+                            <option value="15">15 min antes</option>
+                        </select>
+                    </div>
+
+                    <div class="leyenda-termica" aria-label="Nivel de carga de trabajo">
+                        <span class="leyenda-chip baja">Baja</span>
+                        <span class="leyenda-chip media">Media</span>
+                        <span class="leyenda-chip alta">Alta</span>
+                    </div>
+
+                    <!-- Vista mes -->
+                    <div id="vista-mes">
+                        <div class="calendario-dias-semana">
+                            <span>Lun</span><span>Mar</span><span>Mié</span>
+                            <span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                        </div>
+                        <div class="calendario-grid" id="calendario-grid"></div>
+                    </div>
+
+                    <!-- Vista semana -->
+                    <div id="vista-semana" style="display:none">
+                        <div class="semana-grid" id="semana-grid"></div>
+                    </div>
+
+                </div>
+
+                <!-- Panel lateral del día -->
+                <div class="dia-panel" id="dia-panel">
+                    <h3 id="dia-panel-titulo">Selecciona un día</h3>
+
+                    <!-- Formulario añadir evento -->
+                    <div class="evento-form" id="evento-form" style="display:none">
+                        <input type="text" id="evento-input" placeholder="Nombre del evento...">
+                        <div class="evento-tiempo">
+                            <div class="evento-tiempo-campo">
+                                <label for="evento-hora-inicio">Inicio</label>
+                                <select id="evento-hora-inicio" class="evento-hora-select"></select>
+                            </div>
+                            <div class="evento-tiempo-campo">
+                                <label for="evento-hora-fin">Fin</label>
+                                <select id="evento-hora-fin" class="evento-hora-select"></select>
+                            </div>
+                        </div>
+                        <div class="evento-repeticion">
+                            <label for="evento-repetir-unidad">Repetir</label>
+                            <select id="evento-repetir-unidad">
+                                <option value="ninguna">No repetir</option>
+                                <option value="semana">Cada semana</option>
+                                <option value="mes">Cada mes</option>
+                                <option value="anio">Cada año</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                            <input type="number" id="evento-repetir-cada" min="1" value="1" disabled>
+                        </div>
+                        <div class="evento-repeticion-personalizada" id="evento-repeticion-personalizada"
+                            style="display:none">
+                            <label for="evento-repetir-unidad-personalizada">Unidad</label>
+                            <select id="evento-repetir-unidad-personalizada">
+                                <option value="dia">Días</option>
+                                <option value="semana">Semanas</option>
+                                <option value="mes">Meses</option>
+                                <option value="anio">Años</option>
+                            </select>
+                        </div>
+                        <!-- FIX: color "amarillo" corregido de #4A5759 a #8A6A42 -->
+                        <div class="evento-colores">
+                            <span class="color-opcion activo" data-color="rosa" style="background:#EDAFB8"></span>
+                            <span class="color-opcion" data-color="azul" style="background:#DEDBD2"></span>
+                            <span class="color-opcion" data-color="verde" style="background:#B0C4B1"></span>
+                            <span class="color-opcion" data-color="amarillo" style="background:#8A6A42"></span>
+                        </div>
+                        <button id="btn-anadir-evento"><span class="icono-texto"><i class="ph ph-plus"
+                                    aria-hidden="true"></i><span>Añadir</span></span></button>
+                    </div>
+
+                    <!-- Lista de eventos del día -->
+                    <ul class="eventos-lista" id="eventos-lista"></ul>
+
+                    <!-- Tareas del día -->
+                    <div class="panel-tareas" id="panel-tareas"></div>
+
+                    <!-- Panel edición de tarea -->
+                    <div class="tarea-detalle" id="tarea-detalle" style="display:none">
+                        <h4 class="tarea-detalle-titulo"><span class="icono-texto"><i class="ph ph-pencil-line"
+                                    aria-hidden="true"></i><span>Editar tarea</span></span></h4>
+                        <input type="text" id="tarea-detalle-texto" placeholder="Nombre...">
+                        <select id="tarea-detalle-estado">
+                            <option value="sin-empezar">Sin empezar</option>
+                            <option value="en-ejecucion">En ejecución</option>
+                            <option value="finalizado">Finalizado</option>
+                        </select>
+                        <select id="tarea-detalle-categoria">
+                        </select>
+                        <select id="tarea-detalle-duracion">
+                            <option value="auto">Duración: automática</option>
+                            <option value="30">30 min</option>
+                            <option value="45">45 min</option>
+                            <option value="60">60 min</option>
+                            <option value="90">90 min</option>
+                        </select>
+                        <textarea id="tarea-detalle-descripcion" placeholder="Descripción (opcional)..."></textarea>
+                        <div class="tarea-detalle-botones">
+                            <button id="btn-guardar-tarea"><span class="icono-texto"><i class="ph ph-floppy-disk"
+                                        aria-hidden="true"></i><span>Guardar</span></span></button>
+                            <button id="btn-borrar-tarea"><span class="icono-texto"><i class="ph ph-trash"
+                                        aria-hidden="true"></i><span>Borrar</span></span></button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- TAREAS -->
+        <section id="tareas" class="seccion">
+            <h2>Tareas</h2>
+
+            <div class="tareas-contenedor">
+
+                <div class="tareas-topbar">
+                    <p class="contador">0 tareas pendientes</p>
+                    <div class="tareas-topbar-acciones">
+                        <button id="btn-auto-agendar" type="button" class="vista-btn">
+                            <i class="ph ph-magic-wand" aria-hidden="true"></i> Auto-agendar
+                            <span id="btn-auto-agendar-ajustes" class="auto-agendar-ajustes" title="Preferencias">
+                                <i class="ph ph-sliders-horizontal" aria-hidden="true"></i>
+                            </span>
+                        </button>
+                        <button id="btn-ver-logros" class="vista-btn" type="button">
+                            <i class="ph ph-trophy" aria-hidden="true"></i> Logros
+                        </button>
+                        <button id="btn-toggle-categorias" type="button" class="vista-btn">
+                            <i class="ph ph-tag" aria-hidden="true"></i> Categorías
+                        </button>
+                        <button id="btn-ver-historial" class="vista-btn">
+                            <i class="ph ph-archive" aria-hidden="true"></i> Historial
+                        </button>
+                        <button id="btn-toggle-limpieza" type="button" class="vista-btn">
+                            <i class="ph ph-broom" aria-hidden="true"></i> Limpieza
+                        </button>
+                    </div>
+                </div>
+
+                <div id="logros-enfoque" class="logros-enfoque" aria-live="polite"></div>
+
+                <div id="auto-agenda-preferencias" class="auto-agenda-preferencias" style="display:none">
+                    <h4>Preferencias de Auto-agendado</h4>
+                    <div class="auto-agenda-grid">
+                        <label>Inicio
+                            <input type="time" id="auto-agenda-inicio" value="09:00">
+                        </label>
+                        <label>Fin
+                            <input type="time" id="auto-agenda-fin" value="20:00">
+                        </label>
+                        <label>Descanso (min)
+                            <select id="auto-agenda-descanso">
+                                <option value="0">0</option>
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                            </select>
+                        </label>
+                        <label class="check-inline"><input type="checkbox" id="auto-agenda-fin-semana"> Incluir fin de semana</label>
+                    </div>
+                    <button id="btn-auto-agendar-ahora" type="button" class="vista-btn auto-agendar-ahora">Auto-agendar ahora</button>
+                </div>
+
+                <div class="tareas-categorias" id="panel-categorias" style="display:none">
+                    <div class="tareas-categorias-crear">
+                        <input type="text" id="input-categoria-tarea" placeholder="Nueva categoría de tarea...">
+                        <select id="icono-categoria-tarea" aria-label="Icono categoría tarea">
+                            <option value="tag">Etiqueta</option>
+                            <option value="flower">Flor</option>
+                            <option value="laptop">Portátil</option>
+                            <option value="flame">Urgente</option>
+                            <option value="lightbulb">Idea</option>
+                            <option value="book-open">Estudio</option>
+                            <option value="brain">Pensar</option>
+                            <option value="house">Casa</option>
+                            <option value="briefcase">Trabajo</option>
+                        </select>
+                        <div class="categoria-tarea-colores" id="categoria-tarea-colores">
+                            <span class="categoria-tarea-color activo" data-color="#EDAFB8"
+                                style="background:#EDAFB8"></span>
+                            <span class="categoria-tarea-color" data-color="#F7E1D7" style="background:#F7E1D7"></span>
+                            <span class="categoria-tarea-color" data-color="#DEDBD2" style="background:#DEDBD2"></span>
+                            <span class="categoria-tarea-color" data-color="#B0C4B1" style="background:#B0C4B1"></span>
+                            <span class="categoria-tarea-color" data-color="#4A5759" style="background:#4A5759"></span>
+                        </div>
+                        <button id="btn-crear-categoria-tarea" type="button"><span class="icono-texto"><i
+                                    class="ph ph-plus" aria-hidden="true"></i><span>Crear
+                                    categoría</span></span></button>
+                        <button id="btn-cancelar-edicion-categoria-tarea" type="button"
+                            style="display:none">Cancelar</button>
+                    </div>
+                    <div class="categorias-tarea-lista" id="categorias-tarea-lista"></div>
+                </div>
+
+                <div class="filtros-tareas">
+                    <select id="filtro-categoria">
+                        <option value="todas">Todas las categorías</option>
+                    </select>
+                    <select id="filtro-estado">
+                        <option value="todos">Todos los estados</option>
+                        <option value="sin-empezar">Sin empezar</option>
+                        <option value="en-ejecucion">En ejecución</option>
+                        <option value="finalizado">Finalizado</option>
+                    </select>
+                    <select id="filtro-orden">
+                        <option value="creacion-reciente">Más recientes primero</option>
+                        <option value="creacion-antigua">Más antiguas primero</option>
+                        <option value="limite-cercana">Fecha límite más cercana</option>
+                        <option value="limite-lejana">Fecha límite más lejana</option>
+                        <option value="alfabetico">Alfabético (A-Z)</option>
+                    </select>
+                    <button id="btn-limpiar-filtros" type="button">Limpiar filtros</button>
+                </div>
+
+                <div id="panel-limpieza" class="limpieza-panel" style="display:none">
+                    <div class="limpieza-config">
+                        <label for="tiempo-limpieza">Mover tareas finalizadas al historial tras:</label>
+                        <select id="tiempo-limpieza">
+                            <option value="0">Inmediatamente</option>
+                            <option value="1">1 hora</option>
+                            <option value="24" selected>24 horas</option>
+                            <option value="168">1 semana</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="anadir-tarea">
+                    <select id="categoria"></select>
+                    <input type="text" id="input-tarea" placeholder="Añadir tarea...">
+                    <input type="text" id="input-descripcion-tarea" placeholder="Descripción (opcional)...">
+                    <input type="date" id="fecha-limite" title="Fecha límite (opcional)">
+                    <select id="duracion-tarea" title="Duración estimada para auto-agendar">
+                        <option value="auto" selected>Duración: auto</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">60 min</option>
+                        <option value="90">90 min</option>
+                    </select>
+                    <button id="btn-anadir" type="button"><span class="icono-texto"><i class="ph ph-plus"
+                                aria-hidden="true"></i><span>Añadir</span></span></button>
+                </div>
+
+                <div class="tablero-estados" id="tablero-estados">
+                    <div class="estado-columna" id="columna-sin-empezar">
+                        <h3>Sin empezar</h3>
+                        <ul class="lista-estado" id="lista-sin-empezar"></ul>
+                    </div>
+                    <div class="estado-columna" id="columna-en-ejecucion">
+                        <h3>En ejecución</h3>
+                        <ul class="lista-estado" id="lista-en-ejecucion"></ul>
+                    </div>
+                    <div class="estado-columna" id="columna-finalizado">
+                        <h3>Finalizado</h3>
+                        <ul class="lista-estado" id="lista-finalizado"></ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal historial -->
+            <div id="modal-historial" class="modal-logros" style="display:none" role="dialog" aria-modal="true"
+                aria-labelledby="modal-historial-titulo">
+                <div class="modal-contenido">
+                    <div class="modal-header">
+                        <h3 id="modal-historial-titulo"><i class="ph ph-scroll" aria-hidden="true"></i> Historial de
+                            Tareas</h3>
+                        <button id="cerrar-historial" class="btn-borrar" aria-label="Cerrar historial"><i
+                                class="ph ph-x"></i></button>
+                    </div>
+                    <div id="lista-historial-vacia" class="tareas-vacio">Aún no hay tareas archivadas.</div>
+                    <ul id="lista-historial" class="eventos-lista"></ul>
+                    <button id="btn-vaciar-historial" class="btn-borrar" style="margin-top: 1rem; font-size: 0.7rem;">
+                        Vaciar todo el historial
+                    </button>
+                </div>
+            </div>
+
+            <div id="modal-logros" class="modal-logros" style="display:none" role="dialog" aria-modal="true"
+                aria-labelledby="modal-logros-titulo">
+                <div class="modal-contenido">
+                    <div class="modal-header">
+                        <h3 id="modal-logros-titulo"><i class="ph ph-trophy" aria-hidden="true"></i> Logros de enfoque</h3>
+                        <button id="cerrar-logros" class="btn-borrar" aria-label="Cerrar logros"><i class="ph ph-x"></i></button>
+                    </div>
+                    <p id="logros-resumen" class="logros-resumen"></p>
+                    <ul id="lista-logros" class="lista-logros"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- HABITOS -->
+        <section id="habitos" class="seccion">
+            <h2>Hábitos</h2>
+
+            <div class="habitos-contenedor">
+                <div class="agua-card" id="agua-card">
+                    <div class="agua-card-header">
+                        <h3><span class="icono-texto"><i class="ph ph-drop" aria-hidden="true"></i><span>Beber
+                                    agua</span></span></h3>
+                        <div class="agua-objetivo">
+                            <label for="agua-objetivo-litros">Objetivo (L)</label>
+                            <input type="number" id="agua-objetivo-litros" min="0.5" max="10" step="0.1" value="2">
+                        </div>
+                    </div>
+
+                    <p class="agua-contador"><span id="agua-consumida-litros">0.00</span> / <span
+                            id="agua-objetivo-litros-texto">2.00</span> L hoy</p>
+
+                    <div class="agua-progreso" aria-hidden="true">
+                        <span id="agua-progreso-barra"></span>
+                    </div>
+
+                    <div class="agua-acciones-rapidas">
+                        <button type="button" class="btn-agua-sumar" data-ml="250">+250 ml</button>
+                        <button type="button" class="btn-agua-sumar" data-ml="500">+500 ml</button>
+                        <button type="button" class="btn-agua-sumar" data-ml="750">+750 ml</button>
+                    </div>
+
+                    <div class="agua-acciones-custom">
+                        <input type="number" id="agua-ml-custom" min="50" step="50" placeholder="Cantidad ml...">
+                        <button type="button" id="btn-agua-custom">Añadir</button>
+                        <button type="button" id="btn-agua-reset">Reiniciar hoy</button>
+                    </div>
+                </div>
+
+                <div class="preset-detalle-card" id="ejercicio-card">
+                    <div class="preset-detalle-header">
+                        <h3><span class="icono-texto"><i class="ph ph-barbell"
+                                    aria-hidden="true"></i><span>Ejercicio</span></span></h3>
+                        <div class="preset-objetivo">
+                            <label for="ejercicio-objetivo-min">Objetivo (min)</label>
+                            <input type="number" id="ejercicio-objetivo-min" min="5" max="240" step="5" value="30">
+                        </div>
+                    </div>
+                    <p class="preset-contador"><span id="ejercicio-actual-min">0</span> / <span
+                            id="ejercicio-objetivo-min-texto">30</span> min hoy</p>
+                    <div class="preset-progreso" aria-hidden="true"><span id="ejercicio-progreso"></span></div>
+                    <div class="preset-acciones-rapidas">
+                        <button type="button" class="btn-preset-sumar" data-preset="ejercicio-30" data-amount="10">+10
+                            min</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="ejercicio-30" data-amount="20">+20
+                            min</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="ejercicio-30" data-amount="30">+30
+                            min</button>
+                    </div>
+                    <div class="preset-acciones-custom">
+                        <input type="number" id="ejercicio-custom-min" min="1" step="1" placeholder="Minutos...">
+                        <button type="button" id="btn-ejercicio-custom">Añadir</button>
+                        <button type="button" id="btn-ejercicio-reset">Reiniciar hoy</button>
+                    </div>
+                </div>
+
+                <div class="preset-detalle-card" id="sueno-card">
+                    <div class="preset-detalle-header">
+                        <h3><span class="icono-texto"><i class="ph ph-moon-stars"
+                                    aria-hidden="true"></i><span>Sueño</span></span></h3>
+                        <div class="preset-objetivo">
+                            <label for="sueno-objetivo-horas">Objetivo (h)</label>
+                            <input type="number" id="sueno-objetivo-horas" min="4" max="12" step="0.5" value="8">
+                        </div>
+                    </div>
+                    <p class="preset-contador"><span id="sueno-actual-horas">0.0</span> / <span
+                            id="sueno-objetivo-horas-texto">8.0</span> h hoy</p>
+                    <div class="preset-progreso" aria-hidden="true"><span id="sueno-progreso"></span></div>
+                    <div class="preset-acciones-rapidas">
+                        <button type="button" class="btn-preset-sumar" data-preset="sueno-8h" data-amount="0.5">+0.5
+                            h</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="sueno-8h" data-amount="1">+1
+                            h</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="sueno-8h" data-amount="2">+2
+                            h</button>
+                    </div>
+                    <div class="preset-acciones-custom">
+                        <input type="number" id="sueno-custom-horas" min="0.1" step="0.1" placeholder="Horas...">
+                        <button type="button" id="btn-sueno-custom">Añadir</button>
+                        <button type="button" id="btn-sueno-reset">Reiniciar hoy</button>
+                    </div>
+                </div>
+
+                <div class="preset-detalle-card" id="lectura-card">
+                    <div class="preset-detalle-header">
+                        <h3><span class="icono-texto"><i class="ph ph-book-open"
+                                    aria-hidden="true"></i><span>Lectura</span></span></h3>
+                        <div class="preset-objetivo">
+                            <label for="lectura-objetivo-min">Objetivo (min)</label>
+                            <input type="number" id="lectura-objetivo-min" min="5" max="180" step="5" value="20">
+                        </div>
+                    </div>
+                    <p class="preset-contador"><span id="lectura-actual-min">0</span> / <span
+                            id="lectura-objetivo-min-texto">20</span> min hoy</p>
+                    <div class="preset-progreso" aria-hidden="true"><span id="lectura-progreso"></span></div>
+                    <div class="preset-acciones-rapidas">
+                        <button type="button" class="btn-preset-sumar" data-preset="lectura-20" data-amount="10">+10
+                            min</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="lectura-20" data-amount="20">+20
+                            min</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="lectura-20" data-amount="30">+30
+                            min</button>
+                    </div>
+                    <div class="preset-acciones-custom">
+                        <input type="number" id="lectura-custom-min" min="1" step="1" placeholder="Minutos...">
+                        <button type="button" id="btn-lectura-custom">Añadir</button>
+                        <button type="button" id="btn-lectura-reset">Reiniciar hoy</button>
+                    </div>
+                </div>
+
+                <div class="preset-detalle-card" id="estiramientos-card">
+                    <div class="preset-detalle-header">
+                        <h3><span class="icono-texto"><i class="ph ph-person-simple-run"
+                                    aria-hidden="true"></i><span>Estiramientos</span></span></h3>
+                        <div class="preset-objetivo">
+                            <label for="estiramientos-objetivo-min">Objetivo (min)</label>
+                            <input type="number" id="estiramientos-objetivo-min" min="5" max="120" step="5" value="10">
+                        </div>
+                    </div>
+                    <p class="preset-contador"><span id="estiramientos-actual-min">0</span> / <span
+                            id="estiramientos-objetivo-min-texto">10</span> min hoy</p>
+                    <div class="preset-progreso" aria-hidden="true"><span id="estiramientos-progreso"></span></div>
+                    <div class="preset-acciones-rapidas">
+                        <button type="button" class="btn-preset-sumar" data-preset="estiramientos-10" data-amount="5">+5
+                            min</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="estiramientos-10"
+                            data-amount="10">+10 min</button>
+                        <button type="button" class="btn-preset-sumar" data-preset="estiramientos-10"
+                            data-amount="15">+15 min</button>
+                    </div>
+                    <div class="preset-acciones-custom">
+                        <input type="number" id="estiramientos-custom-min" min="1" step="1" placeholder="Minutos...">
+                        <button type="button" id="btn-estiramientos-custom">Añadir</button>
+                        <button type="button" id="btn-estiramientos-reset">Reiniciar hoy</button>
+                    </div>
+                </div>
+
+                <div class="preset-detalle-card" id="skincare-card">
+                    <div class="preset-detalle-header">
+                        <h3><span class="icono-texto"><i class="ph ph-sparkle"
+                                    aria-hidden="true"></i><span>Skincare</span></span></h3>
+                    </div>
+                    <p class="preset-contador"><span id="skincare-actual">0</span> / 2 pasos hoy</p>
+                    <div class="preset-progreso" aria-hidden="true"><span id="skincare-progreso"></span></div>
+                    <div class="skincare-checks">
+                        <label><input type="checkbox" id="skincare-am"> Mañana</label>
+                        <label><input type="checkbox" id="skincare-pm"> Noche</label>
+                    </div>
+                    <div class="preset-acciones-custom">
+                        <button type="button" id="btn-skincare-reset">Reiniciar hoy</button>
+                    </div>
+                </div>
+
+                <div class="habitos-presets">
+                    <h3>Hábitos predeterminados</h3>
+                    <p>Activa los que quieras empezar a trabajar.</p>
+                    <div class="habitos-presets-grid" id="habitos-presets-grid"></div>
+                </div>
+
+                <p class="habitos-resumen" id="habitos-resumen">0/0 hábitos completados hoy</p>
+
+                <div class="anadir-habito">
+                    <input type="text" id="input-habito" placeholder="Nuevo hábito personalizado...">
+                    <button id="btn-anadir-habito" type="button"><span class="icono-texto"><i class="ph ph-plus"
+                                aria-hidden="true"></i><span>Añadir</span></span></button>
+                </div>
+
+                <ul class="habitos-lista" id="habitos-lista"></ul>
+            </div>
+        </section>
+
+        <!-- NOTAS -->
+        <section id="notas" class="seccion">
+            <h2>Notas</h2>
+
+            <div class="notas-contenedor">
+                <button id="btn-nueva-nota" type="button"><span class="icono-texto"><i class="ph ph-note-pencil"
+                            aria-hidden="true"></i><span>Nueva nota</span></span></button>
+                <div class="notas-grid" id="notas-grid"></div>
+            </div>
+        </section>
+
+        <!-- POMODORO -->
+        <section id="pomodoro" class="seccion">
+            <h2>Pomodoro</h2>
+
+            <div class="pomodoro-contenedor">
+
+                <div class="pomodoro-modos">
+                    <button class="modo-btn activo" data-tiempo="25"><span class="icono-texto"><i class="ph ph-target"
+                                aria-hidden="true"></i><span>Foco</span></span></button>
+                    <button class="modo-btn" data-tiempo="5"><span class="icono-texto"><i class="ph ph-coffee"
+                                aria-hidden="true"></i><span>Descanso corto</span></span></button>
+                    <button class="modo-btn" data-tiempo="15"><span class="icono-texto"><i class="ph ph-armchair"
+                                aria-hidden="true"></i><span>Descanso largo</span></span></button>
+                </div>
+
+                <div class="pomodoro-timer">
+                    <span id="timer-minutos">25</span>
+                    <span class="timer-separador">:</span>
+                    <span id="timer-segundos">00</span>
+                </div>
+
+                <div class="pomodoro-controles">
+                    <button id="btn-iniciar"><span class="icono-texto"><i class="ph ph-play"
+                                aria-hidden="true"></i><span>Iniciar</span></span></button>
+                    <button id="btn-reiniciar"><span class="icono-texto"><i class="ph ph-arrow-clockwise"
+                                aria-hidden="true"></i><span>Reiniciar</span></span></button>
+                </div>
+
+                <p class="pomodoros-completados">
+                    Pomodoros hoy: <span id="contador-pomodoros">0</span> <i class="ph ph-timer" aria-hidden="true"></i>
+                </p>
+
+            </div>
+        </section>
+
+        <!-- CUENTA -->
+        <section id="cuenta" class="seccion">
+            <h2>Mi cuenta</h2>
+            <div class="cuenta-grid">
+
+                <!-- Info de usuario -->
+                <article class="cuenta-card">
+                    <h3><i class="ph ph-user" aria-hidden="true"></i> Datos de la cuenta</h3>
+                    <div class="cuenta-campo">
+                        <label>Correo electrónico</label>
+                        <p id="cuenta-email" class="cuenta-valor">—</p>
+                    </div>
+                </article>
+
+                <!-- Cambiar contraseña -->
+                <article class="cuenta-card">
+                    <h3><i class="ph ph-lock-key" aria-hidden="true"></i> Cambiar contraseña</h3>
+                    <form id="form-cambiar-password" autocomplete="off">
+                        <div class="cuenta-campo">
+                            <label for="cuenta-pass-actual">Contraseña actual</label>
+                            <input type="password" id="cuenta-pass-actual" placeholder="••••••••" required>
+                        </div>
+                        <div class="cuenta-campo">
+                            <label for="cuenta-pass-nueva">Nueva contraseña</label>
+                            <input type="password" id="cuenta-pass-nueva" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        </div>
+                        <div class="cuenta-campo">
+                            <label for="cuenta-pass-confirmar">Confirmar nueva contraseña</label>
+                            <input type="password" id="cuenta-pass-confirmar" placeholder="••••••••" required minlength="6">
+                        </div>
+                        <p id="cuenta-pass-msg" class="cuenta-msg" style="display:none"></p>
+                        <button type="submit" class="cuenta-btn">Cambiar contraseña</button>
+                    </form>
+                </article>
+
+                <!-- Cerrar sesión -->
+                <article class="cuenta-card cuenta-card-logout">
+                    <button id="btn-logout" type="button" class="cuenta-btn cuenta-btn-logout"><i class="ph ph-sign-out" aria-hidden="true"></i> Cerrar sesión</button>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modal-busqueda" class="modal-logros" style="display:none" role="dialog" aria-modal="true"
+        aria-labelledby="modal-busqueda-titulo">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3 id="modal-busqueda-titulo"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> Busqueda rapida</h3>
+                <button id="cerrar-busqueda" class="btn-borrar" aria-label="Cerrar busqueda"><i class="ph ph-x"></i></button>
+            </div>
+            <input type="text" id="input-busqueda-global" placeholder="Buscar tareas, eventos o notas...">
+            <ul id="resultados-busqueda" class="lista-logros" style="margin-top:0.8rem"></ul>
+        </div>
+    </div>
+
+</div><!-- /app-content -->
+    <script src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-app.js"></script>
+</body>
+
+</html>
